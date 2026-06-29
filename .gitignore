@@ -1,0 +1,24 @@
+# Build outputs
+build/
+dist/
+*.class
+
+# Local runtime files
+User/
+Login.txt
+ListWorkOrder.csv
+site_found.txt
+run-logs/
+release/
+chromedriver.exe
+chromedriver-win64/
+chromedriver-win64.zip
+onedrive-offline-backup/
+
+# NetBeans local user settings
+nbproject/private/
+
+# OS/editor files
+Thumbs.db
+.DS_Store
+*.log
