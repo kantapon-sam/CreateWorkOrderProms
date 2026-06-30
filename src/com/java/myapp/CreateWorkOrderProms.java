@@ -93,6 +93,13 @@ public class CreateWorkOrderProms {
                 return;
             }
 
+            progress.setStatus("Waiting for template options...");
+            WorkOrderTemplateSelection.Options templateOptions = WorkOrderTemplateSelection.prompt();
+            if (templateOptions == null) {
+                progress.setStatus("Template options cancelled.");
+                return;
+            }
+
             progress.setStatus("Opening Chrome...");
             WebDriver driver = new ChromeDriver();
 
@@ -150,24 +157,20 @@ public class CreateWorkOrderProms {
                     progress.setWorkProgress(workOrderNumber + 1, workOrderLines.size(), "Site not found: " + siteId);
                 } else {
 
-                    progress.setStatus("Completing first section...");
-                    WebElement button = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[contains(text(), 'Please complete first section')]")));
-                    button.click();
-                    Thread.sleep(1300);
-                    progress.setStatus("Selecting ACC MPLS...");
-                    WebElement spanElement = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//span[contains(text(), 'ACC MPLS')]")));
-                    spanElement.click();
+                    progress.setStatus("Selecting project type " + templateOptions.getProjectType() + "...");
+                    selectProjectType(wait, templateOptions.getProjectType());
                     Thread.sleep(1000);
                     progress.setStatus("Selecting project " + workOrderData[1].trim() + "...");
                     dropdown = wait.until(ExpectedConditions.elementToBeClickable(By.id("ddlProject")));
                     selectProject(new Select(dropdown), workOrderData[1].trim());
                     Thread.sleep(1000);
-                    progress.setStatus("Selecting company...");
+                    progress.setStatus("Selecting company " + templateOptions.getCompany() + "...");
                     Select selectCompany = waitForCompanyOptions(driver, wait);
-                    selectCompany(selectCompany);
+                    selectCompany(selectCompany, templateOptions.getCompany());
                     Thread.sleep(1000);
 
                     progress.setStatus("Loading work template...");
+                    WebElement button;
                     button = wait.until(ExpectedConditions.elementToBeClickable(By.id("template_btn_template")));
                     button.click();
                     Thread.sleep(1000);
@@ -428,6 +431,16 @@ public class CreateWorkOrderProms {
         return !driver.findElements(By.xpath("//*[contains(normalize-space(.), 'Sign Out')]")).isEmpty();
     }
 
+    private static void selectProjectType(WebDriverWait wait, String projectType) throws InterruptedException {
+        WebElement button = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//button[contains(text(), 'Please complete first section')]")));
+        button.click();
+        Thread.sleep(1300);
+        WebElement projectTypeOption = wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//span[normalize-space(.)='" + projectType + "']")));
+        projectTypeOption.click();
+    }
+
     private static void selectProject(Select projectSelect, String projectCode) {
         List<String> availableOptions = new ArrayList<String>();
         for (WebElement option : projectSelect.getOptions()) {
@@ -483,28 +496,28 @@ public class CreateWorkOrderProms {
         return normalizedText.contains("PLEASE SELECT") || normalizedText.equals("--SELECT--");
     }
 
-    private static void selectCompany(Select selectCompany) {
-        WebElement trueMoveFallback = null;
+    private static void selectCompany(Select selectCompany, String companyName) {
+        String targetCompany = normalizeOptionText(companyName);
         List<String> availableOptions = new ArrayList<String>();
         for (WebElement option : selectCompany.getOptions()) {
             String text = option.getText();
             availableOptions.add(text);
             String normalizedText = normalizeOptionText(text);
-            if (normalizedText.contains("TRUE MOVE H")
-                    && normalizedText.contains("UNIVERSAL")
-                    && normalizedText.contains("COMMUNICATION")) {
+            if (normalizedText.equals(targetCompany)) {
                 selectCompany.selectByValue(option.getAttribute("value"));
                 return;
             }
-            if (trueMoveFallback == null && normalizedText.contains("TRUE MOVE H")) {
-                trueMoveFallback = option;
+        }
+
+        for (WebElement option : selectCompany.getOptions()) {
+            String normalizedText = normalizeOptionText(option.getText());
+            if (!isPlaceholderOption(normalizedText)
+                    && (normalizedText.contains(targetCompany) || targetCompany.contains(normalizedText))) {
+                selectCompany.selectByValue(option.getAttribute("value"));
+                return;
             }
         }
-        if (trueMoveFallback != null) {
-            selectCompany.selectByValue(trueMoveFallback.getAttribute("value"));
-            return;
-        }
-        throw new NoSuchElementException("Cannot locate TRUE MOVE H company option. Available options: " + availableOptions);
+        throw new NoSuchElementException("Cannot locate company " + companyName + ". Available options: " + availableOptions);
     }
 
     private static String summarizeOptions(List<String> options) {

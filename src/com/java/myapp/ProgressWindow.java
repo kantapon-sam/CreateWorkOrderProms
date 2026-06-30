@@ -1,6 +1,7 @@
 package com.java.myapp;
 
 import java.awt.BorderLayout;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
 import javax.swing.BorderFactory;
@@ -14,6 +15,7 @@ import javax.swing.SwingUtilities;
 public class ProgressWindow extends JFrame {
 
     private final JLabel statusLabel;
+    private final JLabel versionLabel;
     private final JLabel downloadLabel;
     private final JLabel workLabel;
     private final JProgressBar downloadBar;
@@ -22,6 +24,8 @@ public class ProgressWindow extends JFrame {
 
     public ProgressWindow() {
         super("CreateWorkOrderProms " + AppVersion.displayVersion() + " Progress");
+        versionLabel = new JLabel("CreateWorkOrderProms " + AppVersion.displayVersion());
+        versionLabel.setFont(versionLabel.getFont().deriveFont(Font.BOLD));
         statusLabel = new JLabel("Starting...");
         downloadLabel = new JLabel("ChromeDriver download");
         workLabel = new JLabel("Work order progress");
@@ -35,8 +39,9 @@ public class ProgressWindow extends JFrame {
         workBar.setStringPainted(true);
         workBar.setString("Waiting");
 
-        JPanel panel = new JPanel(new GridLayout(6, 1, 6, 6));
+        JPanel panel = new JPanel(new GridLayout(7, 1, 6, 6));
         panel.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
+        panel.add(versionLabel);
         panel.add(statusLabel);
         panel.add(downloadLabel);
         panel.add(downloadBar);
@@ -46,7 +51,7 @@ public class ProgressWindow extends JFrame {
 
         setLayout(new BorderLayout());
         add(panel, BorderLayout.CENTER);
-        setSize(460, 230);
+        setSize(500, 260);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }

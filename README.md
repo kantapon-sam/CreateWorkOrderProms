@@ -1,6 +1,6 @@
 # CreateWorkOrderProms
 
-Current version: 1.0.1
+Current version: 1.0.2
 
 Java/NetBeans automation for creating PROMs work orders.
 
